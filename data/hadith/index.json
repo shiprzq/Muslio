@@ -1,0 +1,92 @@
+[
+ {
+  "id": "bukhari",
+  "title": "Sahih al-Bukhari",
+  "titleAr": "الجامع المسند الصحيح",
+  "author": "Imam Muhammad ibn Isma'il al-Bukhari (d. 256 AH)",
+  "died": 846,
+  "grading": "Sahih (authentic throughout)",
+  "count": 7589
+ },
+ {
+  "id": "muslim",
+  "title": "Sahih Muslim",
+  "titleAr": "المسند الصحيح",
+  "author": "Imam Muslim ibn al-Hajjaj al-Naysaburi (d. 261 AH)",
+  "died": 875,
+  "grading": "Sahih (authentic throughout)",
+  "count": 7563
+ },
+ {
+  "id": "abudawud",
+  "title": "Sunan Abi Dawud",
+  "titleAr": "سنن أبي داود",
+  "author": "Imam Abu Dawud al-Sijistani (d. 275 AH)",
+  "died": 889,
+  "grading": "Grades vary; many sahih and hasan",
+  "count": 5274
+ },
+ {
+  "id": "tirmidhi",
+  "title": "Jami' al-Tirmidhi",
+  "titleAr": "الجامع الكبير",
+  "author": "Imam Muhammad ibn 'Isa al-Tirmidhi (d. 279 AH)",
+  "died": 892,
+  "grading": "Includes sahih, hasan and da'if, each graded",
+  "count": 3998
+ },
+ {
+  "id": "nasai",
+  "title": "Sunan an-Nasa'i",
+  "titleAr": "المجتبى من السنن",
+  "author": "Imam Ahmad ibn Shu'ayb an-Nasa'i (d. 303 AH)",
+  "died": 915,
+  "grading": "Mostly sahih and hasan, graded in modern editions",
+  "count": 5765
+ },
+ {
+  "id": "ibnmajah",
+  "title": "Sunan Ibn Majah",
+  "titleAr": "سنن ابن ماجه",
+  "author": "Imam Muhammad ibn Yazid Ibn Majah al-Qazwini (d. 273 AH)",
+  "died": 887,
+  "grading": "Grades vary; includes some da'if narrations",
+  "count": 4343
+ },
+ {
+  "id": "malik",
+  "title": "Muwatta Malik",
+  "titleAr": "موطأ الإمام مالك",
+  "author": "Imam Malik ibn Anas (d. 179 AH)",
+  "died": 795,
+  "grading": "Includes marfu', mawquf and mursal reports; grading varies",
+  "count": 1858
+ },
+ {
+  "id": "nawawi",
+  "title": "Forty Hadith of an-Nawawi",
+  "titleAr": "الأربعون النووية",
+  "author": "Imam Yahya ibn Sharaf an-Nawawi (d. 676 AH)",
+  "died": 1277,
+  "grading": "Core hadiths chosen as pillars of the religion",
+  "count": 42
+ },
+ {
+  "id": "qudsi",
+  "title": "Forty Hadith Qudsi",
+  "titleAr": "الأربعون القدسية",
+  "author": "Collected from Sahih and Sunan sources",
+  "died": null,
+  "grading": "Sacred hadiths (hadith qudsi)",
+  "count": 40
+ },
+ {
+  "id": "dehlawi",
+  "title": "Forty Hadith of Shah Waliullah Dehlawi",
+  "titleAr": "أربعون حديثًا لشاه ولي الله الدهلوي",
+  "author": "Shah Waliullah al-Dehlawi (d. 1176 AH)",
+  "died": 1762,
+  "grading": "A concise teaching collection; verify individual source notes",
+  "count": 40
+ }
+]
