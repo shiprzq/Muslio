@@ -1,0 +1,130 @@
+name: Extract release workspace
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - arena/01a09c86-muslio
+    paths:
+      - ".github/workflows/extract-release.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: extract-release
+  cancel-in-progress: true
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: arena/01a09c86-muslio
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/muslio-release
+          gh release download Release --repo shiprzq/Muslio --dir /tmp/muslio-release
+          ls -lh /tmp/muslio-release
+          unzip -l /tmp/muslio-release/*.zip | head -n 200
+
+      - name: Extract and copy project files
+        run: |
+          set -euo pipefail
+          EXTRACT=/tmp/muslio-extracted
+          mkdir -p "$EXTRACT"
+          unzip -q /tmp/muslio-release/*.zip -d "$EXTRACT"
+          echo "Extracted tree (depth 3):"
+          find "$EXTRACT" -maxdepth 3 \( -name node_modules -o -name .git -o -name .venv -o -name venv -o -name .next \) -prune -o -print | head -n 400
+          echo "Top-level entries:"
+          ls -la "$EXTRACT"
+          if [ "$(ls -A "$EXTRACT" | wc -l)" -eq 1 ]; then
+            inner="$EXTRACT/$(ls -A "$EXTRACT")"
+            if [ -d "$inner" ]; then
+              echo "Using nested directory: $inner"
+              SRC="$inner"
+            else
+              SRC="$EXTRACT"
+            fi
+          else
+            SRC="$EXTRACT"
+          fi
+          echo "SRC=$SRC"
+          ls -la "$SRC"
+
+          # Ignore generated/vendor dirs so we only commit source.
+          cat > .gitignore << 'EOF'
+          node_modules/
+          .venv/
+          venv/
+          __pycache__/
+          .pytest_cache/
+          .mypy_cache/
+          .ruff_cache/
+          .next/
+          .nuxt/
+          .output/
+          .turbo/
+          .cache/
+          .parcel-cache/
+          dist/
+          build/
+          coverage/
+          .arena/
+          .DS_Store
+          *.pyc
+          .env
+          .env.local
+          .env.*.local
+          npm-debug.log*
+          yarn-error.log*
+          pnpm-debug.log*
+          EOF
+
+          # Copy everything except git metadata and the extract workflow itself.
+          rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/workflows/extract-release.yml' \
+            --exclude 'node_modules/' \
+            --exclude '.venv/' \
+            --exclude 'venv/' \
+            --exclude '__pycache__/' \
+            --exclude '.next/' \
+            --exclude '.nuxt/' \
+            --exclude '.output/' \
+            --exclude '.turbo/' \
+            --exclude '.cache/' \
+            --exclude '.arena/' \
+            --exclude '.DS_Store' \
+            --exclude '.env' \
+            --exclude '.env.local' \
+            "$SRC"/ ./
+
+          # Drop oversized files GitHub will reject.
+          find . -type f -size +90M -not -path './.git/*' -print -delete || true
+
+          echo "Workspace after copy:"
+          ls -la
+          find . -maxdepth 3 \( -path './.git' -o -name node_modules \) -prune -o -print | head -n 300
+
+      - name: Commit extracted project
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git status --short | head -n 100
+          git commit -m "Extract Muslio workspace from GitHub Release"
+          git push origin arena/01a09c86-muslio
