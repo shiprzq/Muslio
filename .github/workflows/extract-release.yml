@@ -30,20 +30,24 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          set -eu
           mkdir -p /tmp/muslio-release
           gh release download Release --repo shiprzq/Muslio --dir /tmp/muslio-release
           ls -lh /tmp/muslio-release
-          unzip -l /tmp/muslio-release/*.zip | head -n 200
+          unzip -l /tmp/muslio-release/*.zip | sed -n '1,250p'
 
       - name: Extract and copy project files
         run: |
-          set -euo pipefail
+          set -eu
           EXTRACT=/tmp/muslio-extracted
           mkdir -p "$EXTRACT"
           unzip -q /tmp/muslio-release/*.zip -d "$EXTRACT"
-          echo "Extracted tree (depth 3):"
-          find "$EXTRACT" -maxdepth 3 \( -name node_modules -o -name .git -o -name .venv -o -name venv -o -name .next \) -prune -o -print | head -n 400
+          {
+            echo "## Extracted tree"
+            echo '```'
+            find "$EXTRACT" -maxdepth 3 \( -name node_modules -o -name .git -o -name .venv -o -name venv -o -name .next \) -prune -o -print | sed -n '1,400p'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
           echo "Top-level entries:"
           ls -la "$EXTRACT"
           if [ "$(ls -A "$EXTRACT" | wc -l)" -eq 1 ]; then
@@ -60,37 +64,7 @@ jobs:
           echo "SRC=$SRC"
           ls -la "$SRC"
 
-          # Ignore generated/vendor dirs so we only commit source.
-          cat > .gitignore << 'EOF'
-          node_modules/
-          .venv/
-          venv/
-          __pycache__/
-          .pytest_cache/
-          .mypy_cache/
-          .ruff_cache/
-          .next/
-          .nuxt/
-          .output/
-          .turbo/
-          .cache/
-          .parcel-cache/
-          dist/
-          build/
-          coverage/
-          .arena/
-          .DS_Store
-          *.pyc
-          .env
-          .env.local
-          .env.*.local
-          npm-debug.log*
-          yarn-error.log*
-          pnpm-debug.log*
-          EOF
-
-          # Copy everything except git metadata and the extract workflow itself.
-          rsync -a --delete \
+          rsync -a \
             --exclude '.git/' \
             --exclude '.github/workflows/extract-release.yml' \
             --exclude 'node_modules/' \
@@ -108,16 +82,56 @@ jobs:
             --exclude '.env.local' \
             "$SRC"/ ./
 
-          # Drop oversized files GitHub will reject.
           find . -type f -size +90M -not -path './.git/*' -print -delete || true
+
+          if [ ! -f .gitignore ]; then
+            touch .gitignore
+          fi
+          python3 -c '
+          from pathlib import Path
+          p = Path(".gitignore")
+          existing = p.read_text() if p.exists() else ""
+          extras = [
+            "node_modules/",
+            ".venv/",
+            "venv/",
+            "__pycache__/",
+            ".pytest_cache/",
+            ".mypy_cache/",
+            ".ruff_cache/",
+            ".next/",
+            ".nuxt/",
+            ".output/",
+            ".turbo/",
+            ".cache/",
+            ".parcel-cache/",
+            "coverage/",
+            ".arena/",
+            ".DS_Store",
+            "*.pyc",
+            ".env",
+            ".env.local",
+            ".env.*.local",
+          ]
+          lines = existing.splitlines()
+          for e in extras:
+              if e not in lines:
+                  lines.append(e)
+          p.write_text("\n".join(lines).rstrip() + "\n")
+          '
 
           echo "Workspace after copy:"
           ls -la
-          find . -maxdepth 3 \( -path './.git' -o -name node_modules \) -prune -o -print | head -n 300
+          {
+            echo "## Workspace after copy"
+            echo '```'
+            find . -maxdepth 3 \( -path './.git' -o -name node_modules \) -prune -o -print | sed -n '1,300p'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit extracted project
         run: |
-          set -euo pipefail
+          set -eu
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -125,6 +139,7 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git status --short | head -n 100
+          git status --short | sed -n '1,80p'
           git commit -m "Extract Muslio workspace from GitHub Release"
+          git pull --rebase origin arena/01a09c86-muslio || true
           git push origin arena/01a09c86-muslio
