@@ -58,12 +58,11 @@ The UI includes:
 
 The design uses a restrained high-contrast ivory and deep-green system. It intentionally avoids gradients, glassmorphism, low-contrast dark mode, emoji headings, decorative icon grids, scroll reveal effects, and external UI kits.
 
-## Run
+## Run locally
 
 No npm packages are required. Node 18 or later is enough.
 
 ```bash
-cd muslio
 node server.js
 ```
 
@@ -75,7 +74,41 @@ Optional environment variables:
 PORT=9000 CHATWAVE_API_KEY=cw-xxxx node server.js
 ```
 
-For production, set `CHATWAVE_API_KEY` in the environment instead of relying on the development fallback in `server.js`.
+Copy `.env.example` if you want a local template. For production, set `CHATWAVE_API_KEY` in the environment instead of relying on the development fallback in `server.js`.
+
+## Deploy on Render
+
+This repo is a Node web service that already binds `0.0.0.0` and `process.env.PORT`.
+
+### Option A — Blueprint (`render.yaml`)
+
+1. Push this repository to GitHub.
+2. In [Render](https://dashboard.render.com), choose **New → Blueprint**.
+3. Select the repo. Render reads `render.yaml`.
+4. Set `CHATWAVE_API_KEY` when prompted (`sync: false` means it is not stored in the file).
+5. Deploy.
+
+### Option B — Web Service from the dashboard
+
+| Setting | Value |
+| --- | --- |
+| Runtime | Node |
+| Branch | the branch you want to ship |
+| Build command | `npm install` |
+| Start command | `npm start` |
+| Health check path | `/api/health` |
+| Instance | Starter or higher (Free sleeps; first load of the hadith catalog can be a few seconds) |
+
+Environment variables:
+
+| Key | Required | Notes |
+| --- | --- | --- |
+| `CHATWAVE_API_KEY` | Yes in production | ChatWave API key |
+| `NODE_VERSION` | No | Defaults to `20` via `.node-version` |
+| `NODE_ENV` | No | Set to `production` |
+| `PORT` | No | Render injects this |
+
+The service exposes `GET /api/health` for Render health checks. Streaming chat uses Server-Sent Events; the server disables Node's 5-minute request timeout and raises keep-alive timeouts so Render's proxy does not 502 idle sockets.
 
 ## Rebuild the knowledge data
 
@@ -89,6 +122,7 @@ The builder downloads the source editions, aligns Arabic and English hadiths by 
 ## Project layout
 
 ```text
+render.yaml               Render Blueprint (Node web service)
 server.js                 HTTP server, API proxy, local tool loop
 prompt.js                 Muslio's system prompt
 kb.js                     Quran and hadith retrieval/search engine

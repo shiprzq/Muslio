@@ -551,6 +551,25 @@ const server = http.createServer(async (req, res) => {
   res.end('Method not allowed');
 });
 
+function shutdown(signal) {
+  console.log(`Received ${signal}, shutting down`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 8000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 server.listen(PORT, HOST, () => {
-  console.log(`Muslio is running at http://${HOST}:${PORT} (model ${MODEL})`);
+  // Reverse proxies (Render) recycle idle keep-alive sockets around ~75s.
+  // Node's default keepAliveTimeout is 5s, which produces intermittent 502s.
+  // Set these after listen(); some Node versions reset them during bind.
+  server.keepAliveTimeout = 120000;
+  server.headersTimeout = 125000;
+  // Node 18+ caps requests at 5 minutes; SSE chat streams must not be cut.
+  server.requestTimeout = 0;
+  server.timeout = 0;
+  console.log(`Muslio is running on ${HOST}:${PORT} (model ${MODEL})`);
+  if (!process.env.CHATWAVE_API_KEY) {
+    console.warn('CHATWAVE_API_KEY is not set; using the development fallback. Set it as an environment variable for production.');
+  }
 });
