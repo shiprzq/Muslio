@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Muslio</title>
+  <rect width="64" height="64" rx="15" fill="#0b4a36"/>
+  <path d="M13 46V18h8.5L32 33.1 42.5 18H51v28h-9V31.7L32 45.5 22 31.7V46H13Z" fill="#fffaf0"/>
+  <path d="M27.5 18.1c0-3.2 2-5.7 4.5-7.1 2.5 1.4 4.5 3.9 4.5 7.1v1.8h-9v-1.8Z" fill="#d4a72c"/>
+</svg>
